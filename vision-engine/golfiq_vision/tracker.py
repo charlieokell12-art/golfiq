@@ -19,6 +19,9 @@ class TrackerConfig:
     process_noise: float = 20.0
     measurement_noise: float = 12.0
     confidence_weight: float = 25.0
+    launch_origin_x_px: float | None = None
+    launch_origin_y_px: float | None = None
+    max_seed_distance_px: float = 180.0
 
 
 class _Kalman2D:
@@ -55,6 +58,17 @@ class _Kalman2D:
         self.P = (np.eye(4) - K @ H) @ self.P
 
 
+def _choose_seed(frame: list[Detection], config: TrackerConfig) -> Detection | None:
+    if config.launch_origin_x_px is None or config.launch_origin_y_px is None:
+        return max(frame, key=lambda d: d.confidence, default=None)
+    ranked: list[tuple[float, Detection]] = []
+    for candidate in frame:
+        distance = hypot(candidate.x_px - config.launch_origin_x_px, candidate.y_px - config.launch_origin_y_px)
+        if distance <= config.max_seed_distance_px:
+            ranked.append((distance - candidate.confidence * 20.0, candidate))
+    return min(ranked, key=lambda item: item[0])[1] if ranked else None
+
+
 def build_track(detections: list[Detection], config: TrackerConfig = TrackerConfig()) -> list[TrackPoint]:
     candidates = sorted(
         (d for d in detections if d.confidence >= config.min_confidence),
@@ -68,7 +82,9 @@ def build_track(detections: list[Detection], config: TrackerConfig = TrackerConf
         by_frame.setdefault(detection.frame_index, []).append(detection)
 
     first_frame = min(by_frame)
-    seed = max(by_frame[first_frame], key=lambda d: d.confidence)
+    seed = _choose_seed(by_frame[first_frame], config)
+    if seed is None:
+        return []
     track = [_to_point(seed)]
     kf = _Kalman2D(seed.x_px, seed.y_px, config)
     previous_velocity: tuple[float, float] | None = None
@@ -77,10 +93,7 @@ def build_track(detections: list[Detection], config: TrackerConfig = TrackerConf
     for frame_index in range(first_frame + 1, max(by_frame) + 1):
         previous = track[-1]
         frame_candidates = by_frame.get(frame_index, [])
-        if frame_candidates:
-            nominal_t = frame_candidates[0].timestamp_s
-        else:
-            nominal_t = previous.timestamp_s + 1.0 / 120.0
+        nominal_t = frame_candidates[0].timestamp_s if frame_candidates else previous.timestamp_s + 1.0 / 120.0
         dt = max(1e-4, nominal_t - previous.timestamp_s)
         predicted_x, predicted_y = kf.predict(dt)
 
@@ -106,8 +119,7 @@ def build_track(detections: list[Detection], config: TrackerConfig = TrackerConf
                     continue
 
             cost = distance_from_prediction + (1.0 - min(1.0, candidate.confidence)) * config.confidence_weight
-            if candidate.radius_px is not None and track[-1].confidence > 0.0:
-                # Tiny bright objects often change apparent size violently; mild penalty helps reject them.
+            if candidate.radius_px is not None:
                 cost += max(0.0, candidate.radius_px - 30.0) * 0.5
             if cost < best_cost:
                 best = candidate
