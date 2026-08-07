@@ -1,23 +1,37 @@
 # GolfIQ Content Studio
 
-A local VS Code content-generation workspace for TikTok, Instagram Reels and YouTube Shorts.
+A local VS Code golf-content director for TikTok, Instagram Reels and YouTube Shorts.
+
+## What changed
+
+Content Studio is no longer designed around one still image pretending to be a video. The main workflow is now:
+
+`idea -> golf-specific director -> continuity bible -> scene plan -> scene generation -> edit -> 4K portrait export`
+
+The director fills in connective moments users normally omit: walking into address, target selection, holding the finish, reactions, walking off the tee while talking, eyelines, phone checks and natural transition actions.
 
 ## What works now
 
-- One prompt box for image or 15-second video jobs.
-- 9:16 portrait workflow.
-- 4K image export at 2160x3840.
-- 4K H.264 video export with 24/30/48/60 fps choices.
-- Smooth pan/zoom fallback videos that work without a generative GPU.
-- Popular meme-template search using Imgflip's public catalogue (no API key required).
-- Custom meme/image upload or direct-URL import.
-- Meme overlay into rendered video.
-- Local ComfyUI adapter: point the app at any API-format workflow JSON containing `__PROMPT__` placeholders.
-- Model-agnostic design: Flux/SDXL image workflows and Wan/Hunyuan-style video workflows can be swapped without changing the UI.
+- Simple video-idea input rather than requiring a full screenplay.
+- Golf-specific director for tee shots, iron shots and putting stories.
+- Automatic hook, dialogue, camera instructions and scene timing.
+- Character continuity bible: same golfer, face description, clothing and manner across scenes.
+- Location continuity bible: same course, lighting, weather and visual style.
+- Per-scene live-action generation prompts with golf-physics constraints.
+- Storyboard preview mode when no video model is connected.
+- Local ComfyUI multi-scene generation adapter.
+- ComfyUI placeholders: `__PROMPT__`, `__DURATION__`, `__FPS__`, `__FRAMES__`, `__SEED__`.
+- Scene-by-scene normalization to 1080x1920 for practical editing.
+- Final 2160x3840 4K portrait H.264 export.
+- 24/30/48/60 fps final-export options.
+- Popular meme-template search for inspiration/optional use.
+- Downloadable JSON story plan.
 
-## Important 4K note
+## Important limitation
 
-Generating *natively* at 2160x3840 is wasteful and requires a very large GPU. The practical workflow is to generate at a model-friendly resolution, then upscale/render to 4K for social export. This is how Content Studio is designed.
+The director and editor can be built entirely in Python/FFmpeg, but realistic humans actually walking, swinging and talking require a genuine video-generation model. Storyboard Preview deliberately labels itself as a preview rather than presenting an animated still as AI video.
+
+The current recommended architecture is to generate short coherent scenes at model-friendly resolution, then edit and upscale once. Native 2160x3840 diffusion generation is unnecessarily expensive for local use.
 
 ## Run from VS Code
 
@@ -32,42 +46,64 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-The browser opens locally (normally `http://localhost:8501`).
+The browser normally opens at `http://localhost:8501`.
 
-## Free mode
+## After pulling an update
 
-Choose **Free fallback**. It creates a GolfIQ-styled vertical still from the prompt, then turns it into a smooth 15-second 4K video using FFmpeg. This is useful for testing the editor and for text/meme-led content without paying for generation.
+From the repository:
 
-## Free local AI mode
+```bash
+git checkout content-studio
+git pull origin content-studio
+cd content-studio
+.venv\Scripts\activate
+streamlit run app.py
+```
 
-Install ComfyUI separately and start it with API access. Export an **API-format** workflow JSON from ComfyUI and put `__PROMPT__` anywhere the prompt text should be inserted. In Content Studio choose **Local ComfyUI**, enter the workflow path, and press Generate.
+On macOS/Linux use `source .venv/bin/activate`.
 
-Recommended direction:
+## Storyboard Preview
 
-- Images: Flux or SDXL-class workflow.
-- Video: a ComfyUI-compatible open video model such as Wan/Hunyuan-class workflow that your hardware can run.
-- Upscale/interpolation: keep generation moderate-resolution, then use the Content Studio/FFmpeg export stage. A later release can add Real-ESRGAN and RIFE adapters.
+Choose **Storyboard preview** to test the AI-director decisions, timing, scene order and final editing without a local video model. It creates scene cards and stitches them into the planned timeline. This is a structural preview only.
 
-Local model weights can be many gigabytes and are intentionally not stored in GitHub.
+## Local live-action AI
 
-## Hardware reality
+Install ComfyUI separately, add a compatible open video model/workflow, and export the workflow in API format. Put placeholders where Content Studio should inject scene-specific values:
 
-True text-to-video generation is GPU-heavy. A normal laptop without a suitable NVIDIA GPU can still run the UI, meme tools, editing, and 4K export, but it will not generate sophisticated moving AI footage locally at useful speed. The provider layer is deliberately replaceable so a free GPU host or future API can be connected later.
+- `__PROMPT__` - full directed scene prompt
+- `__DURATION__` - scene length in seconds
+- `__FPS__` - requested generation frame rate
+- `__FRAMES__` - requested frame count
+- `__SEED__` - deterministic scene seed
+
+Select **Local ComfyUI**, give Content Studio the workflow JSON path and server URL, and press **Generate complete video**.
+
+A Wan/Hunyuan-class ComfyUI workflow is the intended direction, but the correct model depends on GPU VRAM. Model weights are intentionally not stored in GitHub.
+
+## Why thousands of independent images are not the main approach
+
+A video is technically a sequence of frames, but independently generating thousands of still images usually causes face, clothing, club, grass and lighting flicker. A video model is better because it models temporal consistency. Content Studio still exports thousands of frames in the final MP4, but they should originate from temporally coherent generated clips rather than unrelated still-image generations.
+
+Frame interpolation can later be added between generated frames for additional smoothness; it does not replace the need for temporally coherent source motion.
+
+## Golf realism rules
+
+Per-scene prompts explicitly ask for:
+
+- anatomically believable hands and grip;
+- one normal club with a stable shaft/head;
+- realistic setup, backswing, impact and follow-through;
+- believable ball scale and launch;
+- continuous walking and weight transfer;
+- no teleporting people, duplicated clubs or floating balls;
+- consistent golfer, clothing, golf bag, tee markers, course and sun direction.
+
+These constraints improve prompts but do not guarantee perfect generations; the underlying model determines the actual visual quality.
 
 ## Meme/copyright policy
 
-The built-in search finds popular meme templates. Availability does not automatically grant commercial rights to every image. For GolfIQ advertising, prefer templates/media you have permission to reuse, public-domain/Creative-Commons sources, or original recreations. Users can also upload their own licensed assets.
+Meme search is for discovery/inspiration. Public availability does not automatically grant commercial rights. For GolfIQ advertising, prefer original, licensed, public-domain or compatible Creative-Commons media.
 
-## Viral-content research
+## Trend research
 
-The studio should learn *patterns*, not copy videos. Current research principles for GolfIQ shorts:
-
-- Hook immediately, usually in the first 1–2 seconds.
-- Keep visual movement active behind captions.
-- Relatable golf situations and humour are more natural than a constant product pitch.
-- Use GolfIQ as the payoff/solution rather than the entire subject.
-- Fast cuts, captions, range/shot sounds and visual progress keep attention.
-- End with a question/challenge that invites comments.
-- Build repeatable formats (POV, challenge, myth, relatable fail, improvement, build-in-public) so one idea can produce many variants.
-
-For bulk trend research, add a manifest of public video URLs/metadata and analyse hooks, length, pacing, captions and format. Do not download/reuse copyrighted source video unless its licence permits that use.
+Study patterns rather than copying videos. Useful GolfIQ variables include hook wording, first-shot timing, camera movement, shot type, humour/education/challenge format, average cut length, caption density, product-screen time and ending CTA. Public video metadata can be analysed without downloading/reusing copyrighted source footage.
