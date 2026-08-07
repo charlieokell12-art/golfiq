@@ -7,8 +7,9 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
-from core import OUTPUTS, animate_image_to_4k_video, comfyui_generate, ffmpeg, make_prompt_card
+from core import OUTPUTS, ffmpeg, make_prompt_card
 from director import StoryPlan
+from video_provider import generate_video
 
 
 @dataclass
@@ -19,27 +20,8 @@ class SceneRender:
     note: str
 
 
-def _probe_duration(path: Path) -> float:
-    probe = shutil.which("ffprobe")
-    if not probe:
-        return 0.0
-    try:
-        result = subprocess.check_output(
-            [probe, "-v", "error", "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", str(path)],
-            text=True,
-        ).strip()
-        return float(result)
-    except Exception:
-        return 0.0
-
-
 def _normalise_scene(source: Path, duration: float, fps: int = 30) -> Path:
-    """Normalise an arbitrary generated scene to a TikTok-friendly intermediate.
-
-    We render intermediates at 1080x1920 so multi-scene generation stays practical,
-    then upscale once at the end to 2160x3840. This is dramatically cheaper than
-    generating every intermediate at native 4K.
-    """
+    """Normalise an arbitrary generated scene to a TikTok-friendly intermediate."""
     out = OUTPUTS / f"scene-{uuid.uuid4().hex}.mp4"
     suffix = source.suffix.lower()
     vf = "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,fps=%d,format=yuv420p" % fps
@@ -72,17 +54,24 @@ def render_scenes(
         if provider == "Local ComfyUI":
             if not workflow_path:
                 raise RuntimeError("Local ComfyUI needs a video workflow JSON path.")
-            result = comfyui_generate(scene.generation_prompt, "video", workflow_path, comfy_server)
+            result = generate_video(
+                scene.generation_prompt,
+                workflow_path,
+                comfy_server,
+                duration=scene.duration,
+                fps=fps,
+                # Holding a stable scene seed helps style consistency while prompts
+                # preserve character/location continuity across the full story.
+                seed=24681357 + scene.index,
+            )
             raw = result.path
             note = result.note
         else:
-            # Structural preview only. This proves timing/story/editing without pretending
-            # a still card is genuine AI video.
             raw = make_prompt_card(
                 f"SCENE {scene.index}: {scene.action}\nCAMERA: {scene.camera}\nDIALOGUE: {scene.dialogue}",
                 title=f"GolfIQ Director · Scene {scene.index}",
             )
-            note = "Storyboard preview (install a local video model for live-action generation)"
+            note = "Storyboard preview (connect a local video model for live-action generation)"
         clip = _normalise_scene(raw, scene.duration, fps=fps)
         renders.append(SceneRender(scene.index, clip, scene.duration, note))
     return renders
@@ -92,7 +81,6 @@ def _write_concat_file(renders: list[SceneRender]) -> Path:
     manifest = OUTPUTS / f"concat-{uuid.uuid4().hex}.txt"
     lines = []
     for item in renders:
-        # FFmpeg concat escaping for local paths.
         safe = str(item.path.resolve()).replace("'", "'\\''")
         lines.append(f"file '{safe}'")
     manifest.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -115,8 +103,6 @@ def stitch_and_export_4k(renders: list[SceneRender], fps: int = 30) -> Path:
     )
 
     final = OUTPUTS / f"golfiq-director-4k-{uuid.uuid4().hex}.mp4"
-    # One final upscale keeps intermediate generation lightweight while satisfying
-    # 4K portrait export. Lanczos is deterministic; AI upscalers can be plugged in later.
     vf = f"scale=2160:3840:flags=lanczos,fps={fps},format=yuv420p"
     subprocess.run(
         [
