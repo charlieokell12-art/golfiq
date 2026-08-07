@@ -1,0 +1,18 @@
+source_id,title,page_url,license,media_type,role,verified_note
+commons-golf-ball-grass-1,Golf ball in the grass,https://commons.wikimedia.org/wiki/File:Golf_ball_in_the_grass.jpg,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-golf-ball-artificial-grass,Golf Ball On Artificial Grass,https://commons.wikimedia.org/wiki/File:GolfBallOnArtificialGrass.JPG,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-two-golf-balls,Two golf balls,https://commons.wikimedia.org/wiki/File:Two_golf_balls.jpg,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-golf-balls-glove,Golf balls and glove,https://commons.wikimedia.org/wiki/File:Golf_balls_and_glove.jpg,CC0-1.0,image,hard-negative-and-positive,Wikimedia page explicitly states CC0
+commons-golf-and-tee,Golf and tee,https://commons.wikimedia.org/wiki/File:Golf_and_tee.jpg,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-golf-on-tee,Golf on the tee,https://commons.wikimedia.org/wiki/File:Golf_on_the_tee.jpg,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-golf-on-grass,Golf on grass,https://commons.wikimedia.org/wiki/File:Golf_on_grass.jpg,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-golf-ball-on-tee,Golf ball on tee,https://commons.wikimedia.org/wiki/File:Golf_ball_on_tee.jpg,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-golf-ball-with-tee,Golf ball with tee,https://commons.wikimedia.org/wiki/File:Golf_ball_with_tee.jpg,CC0-1.0,image,setup-positive,Wikimedia page explicitly states CC0
+commons-driving-range-balls,Golf balls driving range,https://commons.wikimedia.org/wiki/File:Golf_balls_driving_range.jpg,CC0-1.0,image,hard-positive,Wikimedia page explicitly states CC0
+commons-driving-range-balls-2,Golf balls at driving range,https://commons.wikimedia.org/wiki/File:Golf_balls_at_driving_range.jpg,CC0-1.0,image,hard-positive,Wikimedia page explicitly states CC0
+commons-golf-tees,Golf Tees,https://commons.wikimedia.org/wiki/File:Golf_Tees.jpg,CC-BY-2.0,image,hard-negative,Wikimedia page lists CC BY 2.0
+commons-driving-range-1,Golf driving range geograph,https://commons.wikimedia.org/wiki/File:Golf_driving_range_-_geograph.org.uk_-_6070521.jpg,CC-BY-SA-2.0,image,background-review,ShareAlike source kept for review and excluded by strict downloader by default
+commons-swing-animation,Golf Swing Animation,https://commons.wikimedia.org/wiki/File:Golf_Swing_Animation.gif,CC-BY-3.0,animation,swing-reference,Wikimedia page explicitly states CC BY 3.0
+commons-swing-slowmo-1,Man practicing golf swing slow motion,https://commons.wikimedia.org/wiki/File:Manpracticinggolfswing-slowmotion-2021-3-24.webm,CC-BY-3.0,video,swing-video,Wikimedia page provides free-license reuse terms
+commons-swing-slowmo-2,Golf swing practice Kanagawa slow motion,https://commons.wikimedia.org/wiki/File:Golf_swing_practice_-_Kanagawa_-_slow_motion_-_2023_June_13.webm,CC-BY-4.0,video,swing-video,Wikimedia page explicitly states CC BY 4.0
+commons-slow-motion-golf,SLOW MOTION,https://commons.wikimedia.org/wiki/File:SLOW_MOTION.webm,CC-BY-3.0,video,swing-video,Wikimedia page explicitly states CC BY 3.0
