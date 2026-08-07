@@ -1,0 +1,13 @@
+source_id,title,page_url,license,approx_images,classes,recommended_use,notes
+rf-publicdomain-25k,Object Detection - Golf Ball,https://universe.roboflow.com/molargiksoftware/object-detection-golf-ball-nbtnq,Public Domain,25000,"clubhead;golfball",train-primary,Public Domain project page; highest-priority labeled source
+rf-trajectory-18k,GolfBallTrajectory,https://universe.roboflow.com/hello-wvsuy/golfballtrajectory,CC-BY-4.0,18000,golfball,train-primary,Trajectory-focused labeled source; retain attribution
+rf-clubball-8k,Golf ClubBall BBOX,https://universe.roboflow.com/golf-ltkyy/golf-clubball-bbox,CC-BY-4.0,7953,"hand;complete golf club;golf ball;golf club head;golf club shaft",train-primary,Useful for ball plus club-head context
+rf-golfproject-1.8k,GolfProject,https://universe.roboflow.com/syed-muhammad-affan/golfproject,CC-BY-4.0,1766,"Golf Ball;Golf Pin",train-secondary,Adds course and pin context
+rf-tracker-458,Golf Ball Tracker,https://universe.roboflow.com/nish-fdivh/golf-ball-tracker-sksye-825gn,CC-BY-4.0,458,"golf-ball;golfball",train-secondary,Small tracker-oriented source
+rf-detection-5.8k,Golf Ball Detection,https://universe.roboflow.com/golf-ball-detection/golf-ball-detection-hii2e,CC-BY-4.0,5785,golfball,train-secondary,Potential overlap with other public datasets; content-hash dedupe required
+rf-sai-gon-1.2k,Golf Ball detection,https://universe.roboflow.com/sai-gon-university/golf-ball-detection-boeqx,CC-BY-4.0,1176,golfball,train-secondary,Project/version pages show extensive augmentation; prefer original/raw images when possible
+rf-datario-1k,Golf Ball Detection,https://universe.roboflow.com/datario-c8sgs/golf-ball-detection-r3lqj/dataset/1,CC-BY-4.0,1007,golfball,train-secondary,YOLO11 export available
+rf-anna-17k,golfBall,https://universe.roboflow.com/anna-gaming/golfball,CC-BY-4.0,17460,golfball,train-secondary,Likely overlaps with newer forks; dedupe against all other sources
+rf-omongs-17k,golfBall,https://universe.roboflow.com/omongs-workspace/golfball-2cmt5,CC-BY-4.0,17460,golfball,train-secondary,Appears related to same 17k corpus as anna-gaming; never double-count without hashing
+rf-golf-raahi-2.3k,golf ball,https://universe.roboflow.com/golf-qnu8o/golf-ball-raahi/dataset/1,CC-BY-4.0,2266,golfball,train-secondary,Version includes augmentations; prefer unaugmented originals
+rf-puttlinx-1.2k,puttlinx-golf-ball,https://universe.roboflow.com/kriss-workspace-pipfo/puttlinx-golf-ball/dataset/5,CC-BY-4.0,1185,golfball,train-secondary,Use for small-ball variety; putting-specific images not sufficient for flight
