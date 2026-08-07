@@ -4,7 +4,16 @@ import argparse
 from pathlib import Path
 
 
-def train(data_yaml: Path, output: Path, model: str, image_size: int, epochs: int, batch: int) -> None:
+def train(
+    data_yaml: Path,
+    output: Path,
+    model: str,
+    image_size: int,
+    epochs: int,
+    batch: int,
+    device: str,
+    workers: int,
+) -> None:
     try:
         from ultralytics import YOLO
     except ImportError as exc:
@@ -17,6 +26,8 @@ def train(data_yaml: Path, output: Path, model: str, image_size: int, epochs: in
         imgsz=image_size,
         epochs=epochs,
         batch=batch,
+        device=device,
+        workers=workers,
         project=str(output),
         name="ball-detector",
         patience=30,
@@ -25,6 +36,7 @@ def train(data_yaml: Path, output: Path, model: str, image_size: int, epochs: in
         cache=False,
         seed=42,
         deterministic=True,
+        amp=True,
     )
     detector.export(format="onnx", imgsz=image_size, simplify=True, dynamic=False)
 
@@ -37,8 +49,10 @@ def main() -> None:
     parser.add_argument("--image-size", type=int, default=1280)
     parser.add_argument("--epochs", type=int, default=160)
     parser.add_argument("--batch", type=int, default=6)
+    parser.add_argument("--device", default="0", help="Ultralytics device string, e.g. 0 or 0,1")
+    parser.add_argument("--workers", type=int, default=4)
     args = parser.parse_args()
-    train(args.data, args.output, args.model, args.image_size, args.epochs, args.batch)
+    train(args.data, args.output, args.model, args.image_size, args.epochs, args.batch, args.device, args.workers)
 
 
 if __name__ == "__main__":
