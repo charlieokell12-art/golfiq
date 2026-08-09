@@ -1,0 +1,28 @@
+sources:
+  - source_id: example-owned-phone-video
+    title: Example owned practice recording
+    source_url: null
+    local_path: raw-videos/example.mp4
+    owner: GolfIQ
+    license: proprietary-owned
+    commercial_ml_use: true
+    attribution_required: false
+    consent_reference: docs/consent/example.txt
+    camera_view: down-the-line
+    device: example-phone
+    notes: Replace this record with real, verified source information.
+
+rules:
+  allowed_licenses:
+    - CC0-1.0
+    - CC-BY-4.0
+    - MIT
+    - Apache-2.0
+    - public-domain
+    - proprietary-owned
+    - explicit-commercial-ml-permission
+  reject_when:
+    - license is unknown
+    - commercial machine-learning use is prohibited
+    - source terms prohibit downloading or dataset creation
+    - consent is required but absent

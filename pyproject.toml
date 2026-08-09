@@ -1,0 +1,23 @@
+[project]
+name = "golfiq-vision"
+version = "0.1.0"
+description = "GolfIQ dataset builder and browser-focused golf vision pipeline"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "opencv-python-headless>=4.9",
+  "pandas>=2.2",
+  "pydantic>=2.6",
+  "PyYAML>=6.0",
+  "scikit-learn>=1.4",
+  "tqdm>=4.66"
+]
+
+[project.optional-dependencies]
+annotation = ["streamlit>=1.33", "Pillow>=10.2"]
+training = ["ultralytics>=8.2", "onnx>=1.16", "onnxruntime>=1.17"]
+test = ["pytest>=8.1"]
+
+[tool.pytest.ini_options]
+pythonpath = ["vision-engine"]
+testpaths = ["vision-engine/tests"]
