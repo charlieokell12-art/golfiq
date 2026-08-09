@@ -81,7 +81,7 @@ def evaluate(y: np.ndarray, carry: np.ndarray, lat_y=None, lat_pred=None) -> Met
 def physics(frame: pd.DataFrame) -> np.ndarray:
     return pd.to_numeric(frame["projectedHorizontalMetres"], errors="coerce").fillna(0).to_numpy() * 1.09361
 
-def fit_browser_ridge(train: pd.DataFrame, test: pd.DataFrame) -> tuple[dict[str, Any], Metrics]:
+def fit_browser_ridge(train: pd.DataFrame, test: pd.DataFrame) -> tuple[dict[str, Any], Metrics, int, int]:
     xtr = train[NUMERIC_FEATURES].apply(pd.to_numeric, errors="coerce")
     xte = test[NUMERIC_FEATURES].apply(pd.to_numeric, errors="coerce")
     medians = xtr.median().fillna(0.0)
@@ -92,7 +92,8 @@ def fit_browser_ridge(train: pd.DataFrame, test: pd.DataFrame) -> tuple[dict[str
     carry_pred = carry.predict(zte)
     lateral_payload = None; lat_true = lat_pred = None
     tm = train["lateralYards"].notna(); vm = test["lateralYards"].notna()
-    if tm.sum() >= 30 and vm.sum() >= 5:
+    lateral_train_count = int(tm.sum()); lateral_test_count = int(vm.sum())
+    if lateral_train_count >= 80 and lateral_test_count >= 20:
         lat = Ridge(alpha=5.0).fit(ztr.loc[tm], train.loc[tm, "lateralYards"])
         lat_true = test.loc[vm, "lateralYards"].to_numpy(); lat_pred = lat.predict(zte.loc[vm])
         lateral_payload = {"intercept": float(lat.intercept_), "coefficients": [float(x) for x in lat.coef_]}
@@ -105,14 +106,16 @@ def fit_browser_ridge(train: pd.DataFrame, test: pd.DataFrame) -> tuple[dict[str
         "carry": {"intercept": float(carry.intercept_), "coefficients": [float(x) for x in carry.coef_]},
         "lateral": lateral_payload,
     }
-    return payload, evaluate(test["carryYards"].to_numpy(), carry_pred, lat_true, lat_pred)
+    return payload, evaluate(test["carryYards"].to_numpy(), carry_pred, lat_true, lat_pred), lateral_train_count, lateral_test_count
 
 def main() -> None:
     p = argparse.ArgumentParser(description="Train GolfIQ calibration models")
     p.add_argument("--input", type=Path, required=True)
     p.add_argument("--output", type=Path, default=Path("runs/calibration"))
     p.add_argument("--max-carry-mae", type=float, default=12.0)
+    p.add_argument("--max-lateral-mae", type=float, default=8.0)
     p.add_argument("--min-improvement", type=float, default=.08)
+    p.add_argument("--min-deploy-samples", type=int, default=200)
     args = p.parse_args()
     frame = load_export(args.input); train_idx, test_idx = split(frame)
     train, test = frame.iloc[train_idx].copy(), frame.iloc[test_idx].copy()
@@ -123,27 +126,44 @@ def main() -> None:
         carry = Pipeline([("pre", preprocess()), ("model", estimator)])
         carry.fit(train[cols], train["carryYards"]); pred = carry.predict(test[cols])
         leaderboard[name] = asdict(evaluate(test["carryYards"].to_numpy(), pred)); fitted[name] = carry
-    browser_payload, browser_metrics = fit_browser_ridge(train, test)
+    browser_payload, browser_metrics, lateral_train_count, lateral_test_count = fit_browser_ridge(train, test)
     leaderboard["browser_ridge"] = asdict(browser_metrics)
     best_research = min(fitted, key=lambda n: leaderboard[n]["carry_mae"])
     browser_improvement = 1.0 - browser_metrics.carry_mae / max(baseline.carry_mae, 1e-9)
-    deploy = browser_metrics.carry_mae <= args.max_carry_mae and browser_improvement >= args.min_improvement
+    enough_data = len(frame) >= args.min_deploy_samples and len(test) >= 40
+    carry_approved = enough_data and browser_metrics.carry_mae <= args.max_carry_mae and browser_improvement >= args.min_improvement
+    lateral_approved = bool(
+        carry_approved and browser_payload.get("lateral") and browser_metrics.lateral_mae is not None
+        and lateral_train_count >= 80 and lateral_test_count >= 20 and browser_metrics.lateral_mae <= args.max_lateral_mae
+    )
     report = {
-        "schema": "golfiq-calibration-eval-v2", "samples": len(frame), "trainSamples": len(train), "testSamples": len(test),
+        "schema": "golfiq-calibration-eval-v3", "samples": len(frame), "trainSamples": len(train), "testSamples": len(test),
         "groupSplit": True, "leaderboard": leaderboard, "bestResearchModel": best_research,
-        "deployModel": "browser_ridge", "deployApproved": deploy,
+        "deployModel": "browser_ridge", "deployApproved": carry_approved,
+        "carryApproved": carry_approved, "lateralApproved": lateral_approved,
+        "lateralTrainSamples": lateral_train_count, "lateralTestSamples": lateral_test_count,
         "deployImprovementOverRawPhysics": browser_improvement,
-        "acceptance": {"maxCarryMae": args.max_carry_mae, "minImprovement": args.min_improvement},
+        "acceptance": {
+            "minDeploySamples": args.min_deploy_samples, "minTestSamples": 40,
+            "maxCarryMae": args.max_carry_mae, "maxLateralMae": args.max_lateral_mae,
+            "minImprovement": args.min_improvement,
+        },
     }
     (args.output / "evaluation.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     joblib.dump(fitted[best_research], args.output / "research_best_carry.joblib")
-    if deploy:
+    if carry_approved:
         browser_payload["evaluation"] = asdict(browser_metrics)
         browser_payload["improvementOverRawPhysics"] = browser_improvement
+        browser_payload["carryApproved"] = True
+        browser_payload["lateralApproved"] = lateral_approved
+        browser_payload["trainingSamples"] = len(frame)
+        browser_payload["testSamples"] = len(test)
+        if not lateral_approved:
+            browser_payload["lateral"] = None
         (args.output / "deployment.json").write_text(json.dumps(browser_payload, indent=2), encoding="utf-8")
         (args.output / "DEPLOY_APPROVED").write_text("browser_ridge\n", encoding="utf-8")
     else:
-        (args.output / "DEPLOY_REJECTED").write_text("Browser model did not beat guarded thresholds; keep physics estimator.\n", encoding="utf-8")
+        (args.output / "DEPLOY_REJECTED").write_text("Browser model did not beat guarded production thresholds; keep physics estimator.\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
 if __name__ == "__main__":
