@@ -1,0 +1,37 @@
+[
+  {
+    "id": "projects-lznpz/golf-ball-object-detection-hpi8g/1",
+    "license": "CC BY 4.0",
+    "approx_images": 22543,
+    "ball_classes": ["golfball"],
+    "source_url": "https://universe.roboflow.com/projects-lznpz/golf-ball-object-detection-hpi8g"
+  },
+  {
+    "id": "anna-gaming/golfball/1",
+    "license": "CC BY 4.0",
+    "approx_images": 17460,
+    "ball_classes": ["golfball"],
+    "source_url": "https://universe.roboflow.com/anna-gaming/golfball"
+  },
+  {
+    "id": "charlphillip-boutet/golf-full/1",
+    "license": "CC BY 4.0",
+    "approx_images": 10812,
+    "ball_classes": ["golf-ball"],
+    "source_url": "https://universe.roboflow.com/charlphillip-boutet/golf-full"
+  },
+  {
+    "id": "ratsstech/golf-ball-detection-v2/1",
+    "license": "CC BY 4.0",
+    "approx_images": 6920,
+    "ball_classes": ["golf ball", "Golf-Ball"],
+    "source_url": "https://universe.roboflow.com/ratsstech/golf-ball-detection-v2"
+  },
+  {
+    "id": "createml-ew7k2/golf-ball-detection-dqzau/1",
+    "license": "CC BY 4.0",
+    "approx_images": 3165,
+    "ball_classes": ["golfball"],
+    "source_url": "https://universe.roboflow.com/createml-ew7k2/golf-ball-detection-dqzau"
+  }
+]
