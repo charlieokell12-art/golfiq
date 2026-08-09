@@ -1,13 +1,13 @@
-"""Safe GolfIQ Kaggle entrypoint.
+"""Safe one-click GolfIQ Kaggle entrypoint.
 
-The original bootstrap could silently fall back to synthetic-only imagery and then
-spend many GPU hours training. That is no longer allowed. This wrapper delegates
-to production_candidate_bootstrap.py, which audits real labelled inputs and fails
-before training when the dataset is not suitable.
+This runs the full production-candidate pipeline: real-data audit, legal public
+train-only augmentation, sanity training, full training, held-out test metrics,
+and ONNX export. It deliberately stops before training if real labelled inputs
+are not good enough.
 """
 
 from pathlib import Path
 import runpy
 
 HERE = Path(__file__).resolve().parent
-runpy.run_path(str(HERE / 'production_candidate_bootstrap.py'), run_name='__main__')
+runpy.run_path(str(HERE / 'full_production_candidate.py'), run_name='__main__')
